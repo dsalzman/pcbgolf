@@ -72,7 +72,8 @@ make score
 
 `make pipeline` runs the placement → route → DRC/connectivity → score sequence.
 The placement step floorplans interfaces and major ICs, then packs remaining
-parts near their strongest electrical peers. Preparation and placement use
+parts near their strongest electrical peers. `place --width … --height …`
+scales that floorplan for routability-versus-volume experiments. Preparation and placement use
 JLCPCB's 0.10 mm trace/space capability, 0.30 mm drills, and a 0.40 mm
 four-layer board (override with `place --layers 2` when exploring lower layer
 penalties). A refilled front-side ground plane removes most ground ratsnest

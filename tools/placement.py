@@ -271,10 +271,11 @@ def _desired_position(
     positions: dict[str, tuple[float, float]],
     by_ref: dict[str, set[str]],
     by_net: dict[str, set[str]],
+    group_anchors: dict[str, tuple[float, float]],
 ) -> tuple[float, float]:
     points: list[tuple[float, float, float]] = []
     group = str(footprint.GetSheetname())
-    anchor = GROUP_ANCHORS.get(group, (131.0, 77.0))
+    anchor = group_anchors.get(group, (131.0, 77.0))
     points.append((anchor[0], anchor[1], 1.0))
 
     for net in by_ref[ref]:
@@ -393,8 +394,21 @@ def place_components(
     positions: dict[str, tuple[float, float]] = {}
     angles: dict[str, int] = {}
     physical_rects: dict[str, Rect] = {}
+    scale_x = width / 62.0
+    scale_y = height / 54.0
 
-    for ref, (x, y, angle) in FIXED_PLACEMENT.items():
+    def transform(point: tuple[float, float]) -> tuple[float, float]:
+        return (
+            x0 + (point[0] - 100.0) * scale_x,
+            y0 + (point[1] - 50.0) * scale_y,
+        )
+
+    group_anchors = {
+        group: transform(anchor) for group, anchor in GROUP_ANCHORS.items()
+    }
+
+    for ref, (base_x, base_y, angle) in FIXED_PLACEMENT.items():
+        x, y = transform((base_x, base_y))
         footprint = footprints[ref]
         shape = next(item for item in options[ref] if item.angle == angle)
         rect = _physical_rect(ref, shape, x, y)
@@ -421,7 +435,9 @@ def place_components(
 
     for ref in sorted(unplaced, key=placement_priority):
         footprint = footprints[ref]
-        desired = _desired_position(ref, footprint, positions, by_ref, by_net)
+        desired = _desired_position(
+            ref, footprint, positions, by_ref, by_net, group_anchors
+        )
         x, y, shape, rect = _find_location(
             ref,
             options[ref],
