@@ -1,0 +1,43 @@
+PYTHON ?= python3
+PCB_TOOL := $(PYTHON) tools/pcbgolf.py
+BUILD_DIR ?= .pcbgolf-build
+PREPARED_BOARD := $(BUILD_DIR)/pcbgolf-prepared.kicad_pcb
+ROUTED_BOARD := $(BUILD_DIR)/pcbgolf-routed.kicad_pcb
+
+.PHONY: help env-check prepare route test score pipeline unit-test
+
+help:
+	@echo "PCB Golf automation"
+	@echo "  make env-check  Verify KiCad 10, Java 25, and Freerouting"
+	@echo "  make prepare    Normalize rules, thickness, contacts, and outline"
+	@echo "  make route      Autoroute the prepared board"
+	@echo "  make test       Run KiCad DRC and connectivity checks"
+	@echo "  make score      Export the assembly and calculate challenge score"
+	@echo "  make pipeline   Prepare, route, test, and score"
+
+env-check:
+	$(PCB_TOOL) env-check
+
+prepare:
+	$(PCB_TOOL) prepare --output $(PREPARED_BOARD)
+
+route: prepare
+	$(PCB_TOOL) route \
+		--input $(PREPARED_BOARD) \
+		--output $(ROUTED_BOARD) \
+		--work-dir $(BUILD_DIR)/route
+
+test:
+	$(PCB_TOOL) test \
+		--input $(ROUTED_BOARD) \
+		--report $(BUILD_DIR)/drc.json
+
+score:
+	$(PCB_TOOL) score \
+		--input $(ROUTED_BOARD) \
+		--artifact-dir $(BUILD_DIR)/score
+
+unit-test:
+	$(PYTHON) -m unittest discover -s tests -v
+
+pipeline: route test score
