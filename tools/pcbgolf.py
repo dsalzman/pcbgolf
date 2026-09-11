@@ -384,6 +384,7 @@ def route_board(
     fanout_passes: int,
     via_cost: int,
     ripup_cost: int,
+    hole_clearance_um: int,
 ) -> dict[str, Any]:
     pcbnew, board = load_board(source)
     configure_routing_rules(pcbnew, board)
@@ -405,7 +406,7 @@ def route_board(
         "--usage_and_diagnostic_data.disable_analytics=true",
         "--logging.file.enabled=false",
         f"--router.copperToEdgeClearanceUm={int(DEFAULT_CLEARANCE_MM * 1000)}",
-        "--router.hole_clearance_um=200",
+        f"--router.hole_clearance_um={hole_clearance_um}",
         f"--router.fanout.enabled={str(fanout).lower()}",
         f"--router.fanout.max_passes={fanout_passes}",
         f"--router.fanout.start_via_diameter_mm={DEFAULT_VIA_SIZE_MM}",
@@ -477,6 +478,7 @@ def command_route(args: argparse.Namespace) -> int:
         fanout_passes=args.fanout_passes,
         via_cost=args.via_cost,
         ripup_cost=args.ripup_cost,
+        hole_clearance_um=args.hole_clearance_um,
     )
     print(json.dumps(result, indent=2))
     return 0
@@ -775,6 +777,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=100,
         help="initial cost of ripping an existing route",
+    )
+    route.add_argument(
+        "--hole-clearance-um",
+        type=int,
+        default=200,
+        help="minimum drill-hole to copper clearance in micrometres",
     )
     route.set_defaults(func=command_route)
 
