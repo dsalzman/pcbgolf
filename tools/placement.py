@@ -55,6 +55,14 @@ class FootprintShape:
     right: float
     bottom: float
 
+    @property
+    def width(self) -> float:
+        return self.right - self.left
+
+    @property
+    def height(self) -> float:
+        return self.bottom - self.top
+
     def at(self, x: float, y: float, ref: str) -> Rect:
         return Rect(
             x + self.left,
