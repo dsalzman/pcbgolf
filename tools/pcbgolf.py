@@ -404,8 +404,11 @@ def route_board(
         "--usage_and_diagnostic_data.disable_analytics=true",
         "--logging.file.enabled=false",
         f"--router.copperToEdgeClearanceUm={int(DEFAULT_CLEARANCE_MM * 1000)}",
+        "--router.hole_clearance_um=200",
         f"--router.fanout.enabled={str(fanout).lower()}",
         f"--router.fanout.max_passes={fanout_passes}",
+        f"--router.fanout.start_via_diameter_mm={DEFAULT_VIA_SIZE_MM}",
+        f"--router.fanout.end_via_diameter_mm={DEFAULT_VIA_SIZE_MM}",
         f"--router.scoring.via_costs={via_cost}",
         f"--router.scoring.plane_via_costs={via_cost}",
         "-de",
@@ -431,6 +434,11 @@ def route_board(
     configure_routing_rules(pcbnew, routed)
     if not pcbnew.ImportSpecctraSES(routed, os.fspath(ses.resolve())):
         raise PcbGolfError(f"KiCad failed to import the routed session {ses}")
+    via_type = getattr(pcbnew, "PCB_VIA_T", None)
+    for item in routed.GetTracks():
+        if via_type is not None and item.Type() == via_type:
+            item.SetWidth(pcbnew.FromMM(DEFAULT_VIA_SIZE_MM))
+            item.SetDrill(pcbnew.FromMM(DEFAULT_VIA_DRILL_MM))
     if len(list(routed.Zones())) and not pcbnew.ZONE_FILLER(routed).Fill(
         routed.Zones()
     ):
