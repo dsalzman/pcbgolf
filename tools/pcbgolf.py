@@ -383,7 +383,6 @@ def route_board(
     fanout: bool,
     fanout_passes: int,
     via_cost: int,
-    algorithm: str,
 ) -> dict[str, Any]:
     pcbnew, board = load_board(source)
     configure_routing_rules(pcbnew, board)
@@ -404,7 +403,6 @@ def route_board(
         "--api_server.enabled=false",
         "--usage_and_diagnostic_data.disable_analytics=true",
         "--logging.file.enabled=false",
-        f"--router.algorithm=freerouting-router{'-v19' if algorithm == 'v19' else ''}",
         f"--router.copperToEdgeClearanceUm={int(DEFAULT_CLEARANCE_MM * 1000)}",
         "--router.hole_clearance_um=200",
         f"--router.fanout.enabled={str(fanout).lower()}",
@@ -476,7 +474,6 @@ def command_route(args: argparse.Namespace) -> int:
         fanout=args.fanout,
         fanout_passes=args.fanout_passes,
         via_cost=args.via_cost,
-        algorithm=args.algorithm,
     )
     print(json.dumps(result, indent=2))
     return 0
@@ -769,12 +766,6 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=500,
         help="Freerouting cost assigned to each via",
-    )
-    route.add_argument(
-        "--algorithm",
-        choices=("current", "v19"),
-        default="current",
-        help="router implementation to use",
     )
     route.set_defaults(func=command_route)
 
