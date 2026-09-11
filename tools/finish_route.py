@@ -421,6 +421,13 @@ def finish_route(pcbnew: Any, board: Any) -> dict[str, Any]:
         (123.75, 55.45),
         pcbnew.In7_Cu,
     )
+    _add_blind_via(
+        pcbnew,
+        board,
+        board.FindNet("+12V"),
+        (123.85, 51.75),
+        pcbnew.In7_Cu,
+    )
 
     if not pcbnew.ZONE_FILLER(board).Fill(board.Zones()):
         raise RuntimeError("Could not refill completion ground planes")
