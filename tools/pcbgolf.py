@@ -311,6 +311,10 @@ def command_place(args: argparse.Namespace) -> int:
     except ModuleNotFoundError:
         from placement import place_components  # type: ignore[no-redef]
 
+    thickness = args.thickness
+    if thickness is None:
+        thickness = 0.8 if args.layers >= 6 else DEFAULT_BOARD_THICKNESS_MM
+
     pcbnew, board = load_board(args.input)
     configure_routing_rules(pcbnew, board)
     normalized_pads = normalize_stacked_connector_pads(board)
@@ -337,7 +341,7 @@ def command_place(args: argparse.Namespace) -> int:
     outline.SetLayer(pcbnew.Edge_Cuts)
     outline.SetWidth(pcbnew.FromMM(0.05))
     board.Add(outline)
-    board.GetDesignSettings().SetBoardThickness(pcbnew.FromMM(args.thickness))
+    board.GetDesignSettings().SetBoardThickness(pcbnew.FromMM(thickness))
     if not args.no_ground_plane:
         add_ground_plane(
             pcbnew,
@@ -355,7 +359,7 @@ def command_place(args: argparse.Namespace) -> int:
         {
             "source": os.fspath(args.input),
             "output": os.fspath(args.output),
-            "thickness_mm": args.thickness,
+            "thickness_mm": thickness,
             "normalized_stacked_pads": normalized_pads,
             "removed_edge_items": removed_edges,
             "copper_layers": args.layers,
@@ -707,8 +711,13 @@ def build_parser() -> argparse.ArgumentParser:
     place.add_argument("--grid", type=float, default=0.25)
     place.add_argument("--component-clearance", type=float, default=0.15)
     place.add_argument("--edge-margin", type=float, default=0.15)
-    place.add_argument("--thickness", type=float, default=DEFAULT_BOARD_THICKNESS_MM)
-    place.add_argument("--layers", type=int, choices=(2, 4), default=4)
+    place.add_argument(
+        "--thickness",
+        type=float,
+        default=None,
+        help="board thickness in mm (default: 0.4 for 2/4 layers, 0.8 otherwise)",
+    )
+    place.add_argument("--layers", type=int, choices=(2, 4, 6, 8), default=4)
     place.add_argument(
         "--no-ground-plane",
         action="store_true",
