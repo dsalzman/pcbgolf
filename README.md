@@ -87,3 +87,13 @@ connections and provides a continuous return path. The score step exports the
 complete assembly, measures its 3D bounding box, counts vias and copper layers,
 writes a JSON breakdown, and produces the STEP assembly required for
 submission.
+
+### Current routed result
+
+| Metric | Result |
+| --- | ---: |
+| Assembly bounding box | 68.000 × 60.000 × 12.298 mm |
+| Copper layers | 8 |
+| Vias | 521 |
+| KiCad DRC errors / unconnected items | 0 / 0 |
+| Local challenge score | **116,225.86** |
