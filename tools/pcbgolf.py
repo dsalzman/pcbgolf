@@ -383,6 +383,7 @@ def route_board(
     fanout: bool,
     fanout_passes: int,
     via_cost: int,
+    ripup_cost: int,
 ) -> dict[str, Any]:
     pcbnew, board = load_board(source)
     configure_routing_rules(pcbnew, board)
@@ -411,6 +412,7 @@ def route_board(
         f"--router.fanout.end_via_diameter_mm={DEFAULT_VIA_SIZE_MM}",
         f"--router.scoring.via_costs={via_cost}",
         f"--router.scoring.plane_via_costs={via_cost}",
+        f"--router.scoring.start_ripup_costs={ripup_cost}",
         "-de",
         dsn,
         "-do",
@@ -474,6 +476,7 @@ def command_route(args: argparse.Namespace) -> int:
         fanout=args.fanout,
         fanout_passes=args.fanout_passes,
         via_cost=args.via_cost,
+        ripup_cost=args.ripup_cost,
     )
     print(json.dumps(result, indent=2))
     return 0
@@ -766,6 +769,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=500,
         help="Freerouting cost assigned to each via",
+    )
+    route.add_argument(
+        "--ripup-cost",
+        type=int,
+        default=100,
+        help="initial cost of ripping an existing route",
     )
     route.set_defaults(func=command_route)
 
