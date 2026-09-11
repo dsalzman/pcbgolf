@@ -291,6 +291,7 @@ def command_place(args: argparse.Namespace) -> int:
         clearance=args.component_clearance,
         edge_margin=args.edge_margin,
     )
+    board.SetCopperLayerCount(args.layers)
 
     outline = pcbnew.PCB_SHAPE(board)
     outline.SetShape(pcbnew.SHAPE_T_RECT)
@@ -313,6 +314,7 @@ def command_place(args: argparse.Namespace) -> int:
             "thickness_mm": args.thickness,
             "normalized_stacked_pads": normalized_pads,
             "removed_edge_items": removed_edges,
+            "copper_layers": args.layers,
         }
     )
     print(json.dumps(result, indent=2))
@@ -415,6 +417,10 @@ def command_route(args: argparse.Namespace) -> int:
 
 def run_drc(board: Path, report: Path, *, include_warnings: bool) -> dict[str, Any]:
     report.parent.mkdir(parents=True, exist_ok=True)
+    project = board.with_suffix(".kicad_pro")
+    root_project = ROOT / "pcbgolf.kicad_pro"
+    if not project.exists() and root_project.is_file():
+        shutil.copy2(root_project, project)
     command: list[str | Path] = [
         "kicad-cli",
         "pcb",
@@ -648,6 +654,7 @@ def build_parser() -> argparse.ArgumentParser:
     place.add_argument("--component-clearance", type=float, default=0.15)
     place.add_argument("--edge-margin", type=float, default=0.15)
     place.add_argument("--thickness", type=float, default=DEFAULT_BOARD_THICKNESS_MM)
+    place.add_argument("--layers", type=int, choices=(2, 4), default=4)
     place.set_defaults(func=command_place)
 
     route = commands.add_parser("route", help="route a board with Freerouting")

@@ -73,7 +73,8 @@ make score
 `make pipeline` runs the placement → route → DRC/connectivity → score sequence.
 The placement step floorplans interfaces and major ICs, then packs remaining
 parts near their strongest electrical peers. Preparation and placement use
-JLCPCB's 0.10 mm two-layer trace/space capability, 0.30 mm drills, and a
-0.40 mm board. The score step exports the complete assembly, measures its 3D
+JLCPCB's 0.10 mm trace/space capability, 0.30 mm drills, and a 0.40 mm
+four-layer board (override with `place --layers 2` when exploring lower layer
+penalties). The score step exports the complete assembly, measures its 3D
 bounding box, counts vias and copper layers, writes a JSON breakdown, and
 produces the STEP assembly required for submission.
