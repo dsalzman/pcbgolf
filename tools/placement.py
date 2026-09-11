@@ -180,6 +180,11 @@ IGNORED_PLACEMENT_NETS = {
     "VLXSMPS",
 }
 
+ROUTING_HALOS = {
+    "U3": 1.50,
+    "U4": 1.20,
+}
+
 
 def _bbox_shape(pcbnew: Any, footprint: Any, angle: int) -> FootprintShape:
     old_position = footprint.GetPosition()
@@ -369,8 +374,8 @@ def place_components(
     *,
     x0: float = 100.0,
     y0: float = 50.0,
-    width: float = 62.0,
-    height: float = 54.0,
+    width: float = 68.0,
+    height: float = 60.0,
     grid: float = 0.25,
     clearance: float = 0.15,
     edge_margin: float = 0.15,
@@ -423,7 +428,7 @@ def place_components(
         positions[ref] = (x, y)
         angles[ref] = angle
         physical_rects[ref] = rect
-        index.add(rect.expanded(clearance / 2))
+        index.add(rect.expanded(max(clearance / 2, ROUTING_HALOS.get(ref, 0.0))))
 
     by_ref, by_net = _nets_by_ref(board)
     unplaced = [ref for ref in footprints if ref not in positions]
