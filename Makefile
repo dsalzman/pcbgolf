@@ -30,7 +30,12 @@ route: place
 	$(PCB_TOOL) route \
 		--input $(PLACED_BOARD) \
 		--output $(ROUTED_BOARD) \
-		--work-dir $(BUILD_DIR)/route
+		--work-dir $(BUILD_DIR)/route \
+		--passes 10 \
+		--fanout \
+		--fanout-passes 1 \
+		--via-cost 20 \
+		--ripup-cost 10
 
 test:
 	$(PCB_TOOL) test \

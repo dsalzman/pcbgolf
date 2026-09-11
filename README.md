@@ -75,11 +75,11 @@ The placement step floorplans interfaces and major ICs, then packs remaining
 parts near their strongest electrical peers. `place --width … --height …`
 scales that floorplan for routability-versus-volume experiments. The default
 68 × 60 mm layout reserves escape-routing halos around the 144-pin MCU and USB
-hub. Preparation and placement use
-JLCPCB's 0.10 mm trace/space capability, 0.30 mm drills, and a 0.40 mm
-four-layer board (override with `place --layers 2` when exploring lower layer
-penalties, or use 6/8 layers with an automatically selected 0.80 mm thickness
-when routing density requires it). A refilled front-side ground plane removes most ground ratsnest
-connections and provides a continuous return path. The score step exports the complete assembly, measures its 3D
-bounding box, counts vias and copper layers, writes a JSON breakdown, and
-produces the STEP assembly required for submission.
+hub. Preparation and placement use JLCPCB's 0.10 mm trace/space capability,
+0.30 mm drills, and a 0.80 mm six-layer board. Use `place --layers 2` or
+`--layers 4` for lower layer penalties, or `--layers 8` for more routing
+capacity. A refilled front-side ground plane removes most ground ratsnest
+connections and provides a continuous return path. The score step exports the
+complete assembly, measures its 3D bounding box, counts vias and copper layers,
+writes a JSON breakdown, and produces the STEP assembly required for
+submission.

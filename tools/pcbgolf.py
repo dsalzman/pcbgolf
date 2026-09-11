@@ -730,7 +730,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="board thickness in mm (default: 0.4 for 2/4 layers, 0.8 otherwise)",
     )
-    place.add_argument("--layers", type=int, choices=(2, 4, 6, 8), default=4)
+    place.add_argument("--layers", type=int, choices=(2, 4, 6, 8), default=6)
     place.add_argument(
         "--no-ground-plane",
         action="store_true",
