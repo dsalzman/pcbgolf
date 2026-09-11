@@ -152,8 +152,10 @@ def command_env_check(_: argparse.Namespace) -> int:
 
 
 def configure_routing_rules(pcbnew: Any, board: Any) -> None:
-    settings = board.GetDesignSettings()
-    netclass = settings.GetDefaultNetClass()
+    netclasses = board.GetAllNetClasses()
+    if "Default" not in netclasses:
+        raise PcbGolfError("The board has no Default netclass")
+    netclass = netclasses["Default"]
     netclass.SetClearance(pcbnew.FromMM(DEFAULT_CLEARANCE_MM))
     netclass.SetTrackWidth(pcbnew.FromMM(DEFAULT_TRACK_WIDTH_MM))
     netclass.SetViaDiameter(pcbnew.FromMM(DEFAULT_VIA_SIZE_MM))
