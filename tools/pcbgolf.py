@@ -26,7 +26,7 @@ FREEROUTING_SHA256 = (
 )
 DEFAULT_TRACK_WIDTH_MM = 0.10
 DEFAULT_CLEARANCE_MM = 0.10
-DEFAULT_VIA_SIZE_MM = 0.45
+DEFAULT_VIA_SIZE_MM = 0.50
 DEFAULT_VIA_DRILL_MM = 0.30
 DEFAULT_BOARD_THICKNESS_MM = 0.40
 
@@ -332,6 +332,7 @@ def route_board(
     selection_strategy: str,
     update_strategy: str,
     fanout: bool,
+    fanout_passes: int,
     via_cost: int,
 ) -> dict[str, Any]:
     pcbnew, board = load_board(source)
@@ -355,6 +356,7 @@ def route_board(
         "--logging.file.enabled=false",
         f"--router.copperToEdgeClearanceUm={int(DEFAULT_CLEARANCE_MM * 1000)}",
         f"--router.fanout.enabled={str(fanout).lower()}",
+        f"--router.fanout.max_passes={fanout_passes}",
         f"--router.scoring.via_costs={via_cost}",
         f"--router.scoring.plane_via_costs={via_cost}",
         "-de",
@@ -409,6 +411,7 @@ def command_route(args: argparse.Namespace) -> int:
         selection_strategy=args.selection_strategy,
         update_strategy=args.update_strategy,
         fanout=args.fanout,
+        fanout_passes=args.fanout_passes,
         via_cost=args.via_cost,
     )
     print(json.dumps(result, indent=2))
@@ -678,6 +681,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--fanout",
         action="store_true",
         help="fan out every SMD pin before routing (uses many more vias)",
+    )
+    route.add_argument(
+        "--fanout-passes",
+        type=int,
+        default=4,
+        help="maximum fanout passes when --fanout is enabled",
     )
     route.add_argument(
         "--via-cost",
