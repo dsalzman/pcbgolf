@@ -444,8 +444,6 @@ def route_board(
         if via_type is not None and item.Type() == via_type:
             item.SetWidth(pcbnew.FromMM(DEFAULT_VIA_SIZE_MM))
             item.SetDrill(pcbnew.FromMM(DEFAULT_VIA_DRILL_MM))
-        elif item.GetWidth() < pcbnew.FromMM(DEFAULT_TRACK_WIDTH_MM):
-            item.SetWidth(pcbnew.FromMM(DEFAULT_TRACK_WIDTH_MM))
     if len(list(routed.Zones())) and not pcbnew.ZONE_FILLER(routed).Fill(
         routed.Zones()
     ):

@@ -75,8 +75,9 @@ The placement step floorplans interfaces and major ICs, then packs remaining
 parts near their strongest electrical peers. `place --width … --height …`
 scales that floorplan for routability-versus-volume experiments. The default
 68 × 60 mm layout reserves escape-routing halos around the 144-pin MCU and USB
-hub. Preparation and placement use JLCPCB's 0.10 mm trace/space capability,
-0.15 mm production-via drills, and a 0.80 mm six-layer board. Use
+hub. Preparation and placement use 0.10 mm trace/space with 0.075 mm local
+fanout neck-downs, 0.15 mm production-via drills, and a 0.80 mm six-layer
+board. Use
 `place --layers 2` or
 `--layers 4` for lower layer penalties, or `--layers 8` for more routing
 capacity. A refilled front-side ground plane removes most ground ratsnest

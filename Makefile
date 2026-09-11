@@ -31,11 +31,12 @@ route: place
 		--input $(PLACED_BOARD) \
 		--output $(ROUTED_BOARD) \
 		--work-dir $(BUILD_DIR)/route \
-		--passes 10 \
+		--passes 20 \
 		--fanout \
 		--fanout-passes 1 \
 		--via-cost 50 \
-		--ripup-cost 100
+		--ripup-cost 100 \
+		--neck-width-um 0
 
 test:
 	$(PCB_TOOL) test \
