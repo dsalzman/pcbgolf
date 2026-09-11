@@ -407,6 +407,7 @@ def route_board(
         "--logging.file.enabled=false",
         f"--router.copperToEdgeClearanceUm={int(DEFAULT_CLEARANCE_MM * 1000)}",
         f"--router.hole_clearance_um={hole_clearance_um}",
+        f"--router.neck_width_um={int(DEFAULT_TRACK_WIDTH_MM * 1000)}",
         f"--router.fanout.enabled={str(fanout).lower()}",
         f"--router.fanout.max_passes={fanout_passes}",
         f"--router.fanout.start_via_diameter_mm={DEFAULT_VIA_SIZE_MM}",
@@ -442,6 +443,8 @@ def route_board(
         if via_type is not None and item.Type() == via_type:
             item.SetWidth(pcbnew.FromMM(DEFAULT_VIA_SIZE_MM))
             item.SetDrill(pcbnew.FromMM(DEFAULT_VIA_DRILL_MM))
+        elif item.GetWidth() < pcbnew.FromMM(DEFAULT_TRACK_WIDTH_MM):
+            item.SetWidth(pcbnew.FromMM(DEFAULT_TRACK_WIDTH_MM))
     if len(list(routed.Zones())) and not pcbnew.ZONE_FILLER(routed).Fill(
         routed.Zones()
     ):
