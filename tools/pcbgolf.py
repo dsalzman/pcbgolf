@@ -422,7 +422,7 @@ def run_drc(board: Path, report: Path, *, include_warnings: bool) -> dict[str, A
     report.parent.mkdir(parents=True, exist_ok=True)
     project = board.with_suffix(".kicad_pro")
     root_project = ROOT / "pcbgolf.kicad_pro"
-    if not project.exists() and root_project.is_file():
+    if board.resolve() != DEFAULT_BOARD.resolve() and root_project.is_file():
         shutil.copy2(root_project, project)
     command: list[str | Path] = [
         "kicad-cli",
