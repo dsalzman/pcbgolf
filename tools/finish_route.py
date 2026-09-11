@@ -335,6 +335,23 @@ def finish_route(pcbnew: Any, board: Any) -> dict[str, Any]:
     board.SetCopperLayerCount(10)
     board.GetDesignSettings().SetBoardThickness(pcbnew.FromMM(1.0))
 
+    removed_power_tracks = 0
+    for item in list(board.GetTracks()):
+        if (
+            item.Type() == pcbnew.PCB_VIA_T
+            or str(item.GetNetname()) != "+12V"
+            or item.GetLayer() != pcbnew.F_Cu
+        ):
+            continue
+        endpoints = (item.GetStart(), item.GetEnd())
+        if all(
+            123.0 <= pcbnew.ToMM(point.x) <= 124.7
+            and 51.5 <= pcbnew.ToMM(point.y) <= 55.6
+            for point in endpoints
+        ):
+            board.Remove(item)
+            removed_power_tracks += 1
+
     moved_tracks = 0
     for item in board.GetTracks():
         if item.GetLayer() == pcbnew.In1_Cu:
@@ -375,6 +392,13 @@ def finish_route(pcbnew: Any, board: Any) -> dict[str, Any]:
             (162.7177, 63.7811),
             (155.4578, 93.5952),
         ),
+        RouteSpec(
+            "+12V",
+            pcbnew.In2_Cu,
+            (123.75, 55.45),
+            (123.75, 55.45),
+            (124.6177, 51.704),
+        ),
     )
     layer_segments: dict[
         int, list[tuple[tuple[float, float], tuple[float, float]]]
@@ -401,6 +425,7 @@ def finish_route(pcbnew: Any, board: Any) -> dict[str, Any]:
         raise RuntimeError("Could not refill completion ground planes")
     return {
         "moved_inner_tracks": moved_tracks,
+        "removed_conflicting_power_tracks": removed_power_tracks,
         "ground_stitch_vias": ground_vias,
         "completed_signal_nets": list(route_points),
         "completion_route_points": route_points,
