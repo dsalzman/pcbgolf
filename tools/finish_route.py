@@ -356,16 +356,16 @@ def finish_route(pcbnew: Any, board: Any) -> dict[str, Any]:
         ),
         RouteSpec(
             "CH1_D_P",
-            pcbnew.In6_Cu,
+            pcbnew.In1_Cu,
             (161.7177, 57.5033),
-            (162.8, 57.5),
+            (161.7177, 57.5033),
             (162.1573, 59.9847),
         ),
         RouteSpec(
             "Net-(U3-PC3_C)",
-            pcbnew.In7_Cu,
+            pcbnew.In1_Cu,
             (142.5, 52.45),
-            (142.5, 51.8),
+            (142.5, 52.45),
             (124.5261, 86.25),
         ),
         RouteSpec(
