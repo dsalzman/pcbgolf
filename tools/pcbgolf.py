@@ -230,6 +230,41 @@ def add_rectangular_outline(
     return pcbnew.ToMM(x1 - x0), pcbnew.ToMM(y1 - y0)
 
 
+def add_ground_plane(
+    pcbnew: Any,
+    board: Any,
+    *,
+    x0: float,
+    y0: float,
+    width: float,
+    height: float,
+    inset: float = 0.20,
+) -> None:
+    net = board.FindNet("GND")
+    if net is None:
+        raise PcbGolfError("The board has no GND net for its ground plane")
+    zone = pcbnew.ZONE(board)
+    zone.SetLayer(pcbnew.F_Cu)
+    zone.SetNetCode(net.GetNetCode())
+    zone.SetZoneName("GND front plane")
+    zone.SetLocalClearance(pcbnew.FromMM(DEFAULT_CLEARANCE_MM))
+    zone.SetMinThickness(pcbnew.FromMM(DEFAULT_TRACK_WIDTH_MM))
+    zone.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)
+    zone.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL)
+    points = pcbnew.VECTOR_VECTOR2I()
+    for x, y in (
+        (x0 + inset, y0 + inset),
+        (x0 + width - inset, y0 + inset),
+        (x0 + width - inset, y0 + height - inset),
+        (x0 + inset, y0 + height - inset),
+    ):
+        points.append(pcbnew.VECTOR2I_MM(x, y))
+    zone.AddPolygon(points)
+    board.Add(zone)
+    if not pcbnew.ZONE_FILLER(board).Fill(board.Zones()):
+        raise PcbGolfError("KiCad could not fill the GND plane")
+
+
 def prepare_board(
     source: Path,
     output: Path,
@@ -303,6 +338,15 @@ def command_place(args: argparse.Namespace) -> int:
     outline.SetWidth(pcbnew.FromMM(0.05))
     board.Add(outline)
     board.GetDesignSettings().SetBoardThickness(pcbnew.FromMM(args.thickness))
+    if not args.no_ground_plane:
+        add_ground_plane(
+            pcbnew,
+            board,
+            x0=args.x,
+            y0=args.y,
+            width=args.width,
+            height=args.height,
+        )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     if not pcbnew.SaveBoard(os.fspath(args.output.resolve()), board):
@@ -315,6 +359,7 @@ def command_place(args: argparse.Namespace) -> int:
             "normalized_stacked_pads": normalized_pads,
             "removed_edge_items": removed_edges,
             "copper_layers": args.layers,
+            "ground_plane": not args.no_ground_plane,
         }
     )
     print(json.dumps(result, indent=2))
@@ -382,6 +427,10 @@ def route_board(
     configure_routing_rules(pcbnew, routed)
     if not pcbnew.ImportSpecctraSES(routed, os.fspath(ses.resolve())):
         raise PcbGolfError(f"KiCad failed to import the routed session {ses}")
+    if len(list(routed.Zones())) and not pcbnew.ZONE_FILLER(routed).Fill(
+        routed.Zones()
+    ):
+        raise PcbGolfError("KiCad could not refill copper zones after routing")
     output.parent.mkdir(parents=True, exist_ok=True)
     if not pcbnew.SaveBoard(os.fspath(output.resolve()), routed):
         raise PcbGolfError(f"KiCad could not save routed board {output}")
@@ -431,6 +480,8 @@ def run_drc(board: Path, report: Path, *, include_warnings: bool) -> dict[str, A
         "--format",
         "json",
         "--severity-error",
+        "--refill-zones",
+        "--save-board",
     ]
     if include_warnings:
         command.append("--severity-warning")
@@ -658,6 +709,11 @@ def build_parser() -> argparse.ArgumentParser:
     place.add_argument("--edge-margin", type=float, default=0.15)
     place.add_argument("--thickness", type=float, default=DEFAULT_BOARD_THICKNESS_MM)
     place.add_argument("--layers", type=int, choices=(2, 4), default=4)
+    place.add_argument(
+        "--no-ground-plane",
+        action="store_true",
+        help="omit the solid front GND plane",
+    )
     place.set_defaults(func=command_place)
 
     route = commands.add_parser("route", help="route a board with Freerouting")

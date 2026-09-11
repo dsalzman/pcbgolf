@@ -75,6 +75,7 @@ The placement step floorplans interfaces and major ICs, then packs remaining
 parts near their strongest electrical peers. Preparation and placement use
 JLCPCB's 0.10 mm trace/space capability, 0.30 mm drills, and a 0.40 mm
 four-layer board (override with `place --layers 2` when exploring lower layer
-penalties). The score step exports the complete assembly, measures its 3D
+penalties). A refilled front-side ground plane removes most ground ratsnest
+connections and provides a continuous return path. The score step exports the complete assembly, measures its 3D
 bounding box, counts vias and copper layers, writes a JSON breakdown, and
 produces the STEP assembly required for submission.
