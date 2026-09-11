@@ -331,9 +331,9 @@ def _obstacles(
 
 
 def finish_route(pcbnew: Any, board: Any) -> dict[str, Any]:
-    """Complete the deterministic 20-pass route on four freed inner layers."""
-    board.SetCopperLayerCount(10)
-    board.GetDesignSettings().SetBoardThickness(pcbnew.FromMM(1.0))
+    """Complete the deterministic 20-pass route on freed inner layers."""
+    board.SetCopperLayerCount(8)
+    board.GetDesignSettings().SetBoardThickness(pcbnew.FromMM(0.8))
 
     moved_power_tracks = 0
     for item in board.GetTracks():
@@ -349,7 +349,7 @@ def finish_route(pcbnew: Any, board: Any) -> dict[str, Any]:
             and 51.5 <= pcbnew.ToMM(point.y) <= 55.6
             for point in endpoints
         ):
-            item.SetLayer(pcbnew.In7_Cu)
+            item.SetLayer(pcbnew.In6_Cu)
             moved_power_tracks += 1
 
     moved_tracks = 0
@@ -387,7 +387,7 @@ def finish_route(pcbnew: Any, board: Any) -> dict[str, Any]:
         ),
         RouteSpec(
             "CH2_SBU1",
-            pcbnew.In8_Cu,
+            pcbnew.In6_Cu,
             (162.7177, 63.7811),
             (162.7177, 63.7811),
             (155.4578, 93.5952),
@@ -419,14 +419,14 @@ def finish_route(pcbnew: Any, board: Any) -> dict[str, Any]:
         board,
         board.FindNet("+12V"),
         (123.75, 55.45),
-        pcbnew.In7_Cu,
+        pcbnew.In6_Cu,
     )
     _add_blind_via(
         pcbnew,
         board,
         board.FindNet("+12V"),
         (123.85, 51.75),
-        pcbnew.In7_Cu,
+        pcbnew.In6_Cu,
     )
 
     if not pcbnew.ZONE_FILLER(board).Fill(board.Zones()):
