@@ -487,6 +487,22 @@ def command_route(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_finish(args: argparse.Namespace) -> int:
+    try:
+        from tools.finish_route import finish_route
+    except ModuleNotFoundError:
+        from finish_route import finish_route  # type: ignore[no-redef]
+
+    pcbnew, board = load_board(args.input)
+    result = finish_route(pcbnew, board)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    if not pcbnew.SaveBoard(os.fspath(args.output.resolve()), board):
+        raise PcbGolfError(f"KiCad could not save completed board {args.output}")
+    result.update({"source": os.fspath(args.input), "output": os.fspath(args.output)})
+    print(json.dumps(result, indent=2))
+    return 0
+
+
 def run_drc(board: Path, report: Path, *, include_warnings: bool) -> dict[str, Any]:
     report.parent.mkdir(parents=True, exist_ok=True)
     project = board.with_suffix(".kicad_pro")
@@ -794,6 +810,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="automatic neck-down trace width in micrometres (0 uses router default)",
     )
     route.set_defaults(func=command_route)
+
+    finish = commands.add_parser(
+        "finish", help="complete the final dense nets and ground-plane islands"
+    )
+    finish.add_argument("--input", type=Path, required=True)
+    finish.add_argument("--output", type=Path, required=True)
+    finish.set_defaults(func=command_finish)
 
     test = commands.add_parser("test", help="run KiCad DRC and connectivity checks")
     test.add_argument("--input", type=Path, required=True)

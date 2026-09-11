@@ -66,11 +66,13 @@ make env-check
 make prepare
 make place
 make route
+make finish
 make test
 make score
 ```
 
-`make pipeline` runs the placement → route → DRC/connectivity → score sequence.
+`make pipeline` runs placement → autorouting → dense-route completion →
+DRC/connectivity → scoring.
 The placement step floorplans interfaces and major ICs, then packs remaining
 parts near their strongest electrical peers. `place --width … --height …`
 scales that floorplan for routability-versus-volume experiments. The default
