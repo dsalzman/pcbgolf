@@ -54,3 +54,46 @@ Lowest score on the [leaderboard](https://comma.ai/leaderboard#pcbgolf_challenge
 
 Submit a `.zip` file containing your finalized KiCad project and a STEP file of the final assembly [here](https://forms.gle/US88Hg7UR6bBuW3BA).
 Competitive scores will be posted on the [leaderboard](https://comma.ai/leaderboard#pcbgolf_challenge) after review. Multiple submissions allowed.
+
+## Automated workflow
+
+The repository includes a reproducible headless environment with KiCad 10.0,
+Java 25, and Freerouting 2.4.1. Generated files stay under
+`.pcbgolf-build/`.
+
+```bash
+make env-check
+make prepare
+make place
+make route
+make finish
+make test
+make score
+```
+
+`make pipeline` runs placement → autorouting → dense-route completion →
+DRC/connectivity → scoring.
+The placement step floorplans interfaces and major ICs, then packs remaining
+parts near their strongest electrical peers. `place --width … --height …`
+scales that floorplan for routability-versus-volume experiments. The default
+68 × 60 mm layout reserves escape-routing halos around the 144-pin MCU and USB
+hub. Preparation and placement use 0.10 mm trace/space with 0.075 mm local
+fanout neck-downs, 0.15 mm production-via drills, and a 0.80 mm six-layer
+board. Use
+`place --layers 2` or
+`--layers 4` for lower layer penalties, or `--layers 8` for more routing
+capacity. A refilled front-side ground plane removes most ground ratsnest
+connections and provides a continuous return path. The score step exports the
+complete assembly, measures its 3D bounding box, counts vias and copper layers,
+writes a JSON breakdown, and produces the STEP assembly required for
+submission.
+
+### Current routed result
+
+| Metric | Result |
+| --- | ---: |
+| Assembly bounding box | 68.000 × 60.000 × 12.298 mm |
+| Copper layers | 8 |
+| Vias | 521 |
+| KiCad DRC errors / unconnected items | 0 / 0 |
+| Local challenge score | **116,225.86** |

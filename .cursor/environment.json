@@ -1,0 +1,9 @@
+{
+  "name": "PCB Golf — KiCad 10 + Freerouting",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "user": "ubuntu",
+  "install": "python3 tools/pcbgolf.py env-check"
+}
