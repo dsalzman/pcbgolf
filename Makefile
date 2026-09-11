@@ -34,8 +34,8 @@ route: place
 		--passes 10 \
 		--fanout \
 		--fanout-passes 1 \
-		--via-cost 20 \
-		--ripup-cost 10
+		--via-cost 50 \
+		--ripup-cost 100
 
 test:
 	$(PCB_TOOL) test \
