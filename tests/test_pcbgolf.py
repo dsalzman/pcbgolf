@@ -6,6 +6,7 @@ import tempfile
 import unittest
 
 from tools.pcbgolf import stl_bounds
+from tools.placement import Rect, SpatialIndex
 
 
 class StlBoundsTest(unittest.TestCase):
@@ -62,6 +63,21 @@ endsolid board
             path.write_text("solid empty\nendsolid empty\n")
             with self.assertRaisesRegex(RuntimeError, "No mesh vertices"):
                 stl_bounds(path)
+
+
+class PlacementGeometryTest(unittest.TestCase):
+    def test_touching_rectangles_do_not_overlap(self) -> None:
+        left = Rect(0.0, 0.0, 2.0, 2.0, "left")
+        right = Rect(2.0, 0.0, 4.0, 2.0, "right")
+        self.assertFalse(left.overlaps(right))
+        self.assertTrue(left.expanded(0.1).overlaps(right))
+
+    def test_spatial_index_reports_each_collision_once(self) -> None:
+        index = SpatialIndex(cell_size=1.0)
+        placed = Rect(0.0, 0.0, 3.0, 3.0, "U1")
+        index.add(placed)
+        collisions = index.collisions(Rect(1.0, 1.0, 2.0, 2.0, "R1"))
+        self.assertEqual(collisions, [placed])
 
 
 if __name__ == "__main__":

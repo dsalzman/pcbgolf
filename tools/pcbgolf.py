@@ -270,6 +270,55 @@ def command_prepare(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_place(args: argparse.Namespace) -> int:
+    try:
+        from tools.placement import place_components
+    except ModuleNotFoundError:
+        from placement import place_components  # type: ignore[no-redef]
+
+    pcbnew, board = load_board(args.input)
+    configure_routing_rules(pcbnew, board)
+    normalized_pads = normalize_stacked_connector_pads(board)
+    removed_edges = remove_edge_cuts(pcbnew, board)
+    result = place_components(
+        pcbnew,
+        board,
+        x0=args.x,
+        y0=args.y,
+        width=args.width,
+        height=args.height,
+        grid=args.grid,
+        clearance=args.component_clearance,
+        edge_margin=args.edge_margin,
+    )
+
+    outline = pcbnew.PCB_SHAPE(board)
+    outline.SetShape(pcbnew.SHAPE_T_RECT)
+    outline.SetStart(pcbnew.VECTOR2I_MM(args.x, args.y))
+    outline.SetEnd(
+        pcbnew.VECTOR2I_MM(args.x + args.width, args.y + args.height)
+    )
+    outline.SetLayer(pcbnew.Edge_Cuts)
+    outline.SetWidth(pcbnew.FromMM(0.05))
+    board.Add(outline)
+    board.GetDesignSettings().SetBoardThickness(pcbnew.FromMM(args.thickness))
+
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    if not pcbnew.SaveBoard(os.fspath(args.output.resolve()), board):
+        raise PcbGolfError(f"KiCad could not save placed board {args.output}")
+    result.update(
+        {
+            "source": os.fspath(args.input),
+            "output": os.fspath(args.output),
+            "thickness_mm": args.thickness,
+            "normalized_stacked_pads": normalized_pads,
+            "removed_edge_items": removed_edges,
+        }
+    )
+    print(json.dumps(result, indent=2))
+    return 0
+
+
 def route_board(
     source: Path,
     output: Path,
@@ -280,6 +329,8 @@ def route_board(
     improvement_threshold: float,
     selection_strategy: str,
     update_strategy: str,
+    fanout: bool,
+    via_cost: int,
 ) -> dict[str, Any]:
     pcbnew, board = load_board(source)
     configure_routing_rules(pcbnew, board)
@@ -301,6 +352,9 @@ def route_board(
         "--usage_and_diagnostic_data.disable_analytics=true",
         "--logging.file.enabled=false",
         f"--router.copperToEdgeClearanceUm={int(DEFAULT_CLEARANCE_MM * 1000)}",
+        f"--router.fanout.enabled={str(fanout).lower()}",
+        f"--router.scoring.via_costs={via_cost}",
+        f"--router.scoring.plane_via_costs={via_cost}",
         "-de",
         dsn,
         "-do",
@@ -352,6 +406,8 @@ def command_route(args: argparse.Namespace) -> int:
         improvement_threshold=args.improvement_threshold,
         selection_strategy=args.selection_strategy,
         update_strategy=args.update_strategy,
+        fanout=args.fanout,
+        via_cost=args.via_cost,
     )
     print(json.dumps(result, indent=2))
     return 0
@@ -575,6 +631,25 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--thickness", type=float, default=DEFAULT_BOARD_THICKNESS_MM)
     prepare.set_defaults(func=command_prepare)
 
+    place = commands.add_parser(
+        "place", help="apply the connectivity-aware compact floorplan"
+    )
+    place.add_argument("--input", type=Path, default=DEFAULT_BOARD)
+    place.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_BUILD_DIR / "pcbgolf-placed.kicad_pcb",
+    )
+    place.add_argument("--x", type=float, default=100.0)
+    place.add_argument("--y", type=float, default=50.0)
+    place.add_argument("--width", type=float, default=62.0)
+    place.add_argument("--height", type=float, default=54.0)
+    place.add_argument("--grid", type=float, default=0.25)
+    place.add_argument("--component-clearance", type=float, default=0.15)
+    place.add_argument("--edge-margin", type=float, default=0.15)
+    place.add_argument("--thickness", type=float, default=DEFAULT_BOARD_THICKNESS_MM)
+    place.set_defaults(func=command_place)
+
     route = commands.add_parser("route", help="route a board with Freerouting")
     route.add_argument("--input", type=Path, required=True)
     route.add_argument("--output", type=Path, required=True)
@@ -591,6 +666,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--update-strategy",
         choices=("greedy", "global", "hybrid"),
         default="greedy",
+    )
+    route.add_argument(
+        "--fanout",
+        action="store_true",
+        help="fan out every SMD pin before routing (uses many more vias)",
+    )
+    route.add_argument(
+        "--via-cost",
+        type=int,
+        default=500,
+        help="Freerouting cost assigned to each via",
     )
     route.set_defaults(func=command_route)
 

@@ -64,13 +64,16 @@ Java 25, and Freerouting 2.4.1. Generated files stay under
 ```bash
 make env-check
 make prepare
+make place
 make route
 make test
 make score
 ```
 
-`make pipeline` runs the prepare → route → DRC/connectivity → score sequence.
-The preparation step uses JLCPCB's 0.10 mm two-layer trace/space capability,
-0.30 mm drills, and a 0.40 mm board. The score step exports the complete
-assembly, measures its 3D bounding box, counts vias and copper layers, writes a
-JSON breakdown, and produces the STEP assembly required for submission.
+`make pipeline` runs the placement → route → DRC/connectivity → score sequence.
+The placement step floorplans interfaces and major ICs, then packs remaining
+parts near their strongest electrical peers. Preparation and placement use
+JLCPCB's 0.10 mm two-layer trace/space capability, 0.30 mm drills, and a
+0.40 mm board. The score step exports the complete assembly, measures its 3D
+bounding box, counts vias and copper layers, writes a JSON breakdown, and
+produces the STEP assembly required for submission.

@@ -20,3 +20,5 @@ Thumbs.db
 
 # Generated autorouter, DRC, score, and 3D-export artifacts
 .pcbgolf-build/
+__pycache__/
+*.py[cod]
